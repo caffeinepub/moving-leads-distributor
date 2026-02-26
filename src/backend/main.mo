@@ -1,20 +1,22 @@
 import Map "mo:core/Map";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
-import List "mo:core/List";
 import Iter "mo:core/Iter";
+import List "mo:core/List";
 import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 
-import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import MixinAuthorization "authorization/MixinAuthorization";
 
-
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
+  // Types
   type Lead = {
     id : Text;
     customerName : Text;
@@ -35,7 +37,17 @@ actor {
     contactName : Text;
     phone : Text;
     email : Text;
+    pricePerLead : Nat;
     createdAt : Time.Time;
+  };
+
+  type LogEntry = {
+    timestamp : Time.Time;
+    message : Text;
+  };
+
+  type UserProfile = {
+    name : Text;
   };
 
   type MoveSize = {
@@ -72,41 +84,24 @@ actor {
     };
   };
 
-  type LogEntry = {
-    timestamp : Time.Time;
-    message : Text;
+  type BillingSummary = {
+    companyId : Text;
+    companyName : Text;
+    totalLeads : Nat;
+    studioCount : Nat;
+    oneBRCount : Nat;
+    twoBRCount : Nat;
+    threeBRPlusCount : Nat;
+    pricePerLead : Nat;
+    totalAmount : Nat;
   };
 
-  type UserProfile = {
-    name : Text;
-  };
-
-  // Maps for storing data
-  let leadsMap = Map.empty<Text, Lead>();
-  let companiesMap = Map.empty<Text, Company>();
-  let leadAssignments = Map.empty<Text, List.List<Text>>();
-  let leadLogs = Map.empty<Text, List.List<LogEntry>>();
-  let userProfiles = Map.empty<Principal, UserProfile>();
-
-  module Lead {
-    public func compareByCreatedAt(lead1 : Lead, lead2 : Lead) : {
-      #less;
-      #equal;
-      #greater;
-    } {
-      if (lead1.createdAt < lead2.createdAt) { #less } else if (lead1.createdAt > lead2.createdAt) {
-        #greater;
-      } else { #equal };
-    };
-
-    public func compareByCustomerName(lead1 : Lead, lead2 : Lead) : {
-      #less;
-      #equal;
-      #greater;
-    } {
-      Text.compare(lead1.customerName, lead2.customerName);
-    };
-  };
+  // State
+  let leadsMap : Map.Map<Text, Lead> = Map.empty<Text, Lead>();
+  let companiesMap : Map.Map<Text, Company> = Map.empty<Text, Company>();
+  let leadAssignments : Map.Map<Text, List.List<Text>> = Map.empty<Text, List.List<Text>>();
+  let leadLogs : Map.Map<Text, List.List<LogEntry>> = Map.empty<Text, List.List<LogEntry>>();
+  let userProfiles : Map.Map<Principal, UserProfile> = Map.empty<Principal, UserProfile>();
 
   // User Profile Management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -213,7 +208,14 @@ actor {
   };
 
   // Company Management (Admin Only)
-  public shared ({ caller }) func createCompany(id : Text, name : Text, contactName : Text, phone : Text, email : Text) : async () {
+  public shared ({ caller }) func createCompany(
+    id : Text,
+    name : Text,
+    contactName : Text,
+    phone : Text,
+    email : Text,
+    pricePerLead : Nat,
+  ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
@@ -228,13 +230,21 @@ actor {
       contactName;
       phone;
       email;
+      pricePerLead;
       createdAt = Time.now();
     };
 
     companiesMap.add(id, company);
   };
 
-  public shared ({ caller }) func updateCompany(id : Text, name : Text, contactName : Text, phone : Text, email : Text) : async () {
+  public shared ({ caller }) func updateCompany(
+    id : Text,
+    name : Text,
+    contactName : Text,
+    phone : Text,
+    email : Text,
+    pricePerLead : Nat,
+  ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
@@ -246,9 +256,28 @@ actor {
       contactName;
       phone;
       email;
+      pricePerLead;
       createdAt = company.createdAt;
     };
     companiesMap.add(id, updatedCompany);
+  };
+
+  public shared ({ caller }) func setCompanyPricePerLead(companyId : Text, price : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    let company = getCompanyHelper(companyId);
+    let updatedCompany : Company = {
+      id = company.id;
+      name = company.name;
+      contactName = company.contactName;
+      phone = company.phone;
+      email = company.email;
+      pricePerLead = price;
+      createdAt = company.createdAt;
+    };
+    companiesMap.add(companyId, updatedCompany);
   };
 
   public shared ({ caller }) func deleteCompany(id : Text) : async () {
@@ -359,30 +388,88 @@ actor {
     leadLogs.add(leadId, currentLogs);
   };
 
-  // Queries (Public)
+  // Billing Summary Query (Admin Only)
+  public query ({ caller }) func getBillingSummary() : async [BillingSummary] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    let summaries = companiesMap.values().toArray().map(
+      func(company) {
+        let assignedLeads = leadsMap.values().toArray().filter(
+          func(lead) {
+            switch (leadAssignments.get(lead.id)) {
+              case (null) { false };
+              case (?companies) {
+                companies.values().any(func(id) { id == company.id });
+              };
+            };
+          }
+        );
+
+        let studioCount = assignedLeads.filter(func(lead) { lead.moveSize == #studio }).size();
+        let oneBRCount = assignedLeads.filter(func(lead) { lead.moveSize == #oneBR }).size();
+        let twoBRCount = assignedLeads.filter(func(lead) { lead.moveSize == #twoBR }).size();
+        let threeBRPlusCount = assignedLeads.filter(func(lead) { lead.moveSize == #threeBRPlus }).size();
+
+        {
+          companyId = company.id;
+          companyName = company.name;
+          totalLeads = assignedLeads.size();
+          studioCount;
+          oneBRCount;
+          twoBRCount;
+          threeBRPlusCount;
+          pricePerLead = company.pricePerLead;
+          totalAmount = assignedLeads.size() * company.pricePerLead;
+        };
+      }
+    );
+    summaries;
+  };
+
+  // Queries (Admin Only)
   public query ({ caller }) func getAllLeads() : async [Lead] {
-    leadsMap.values().toArray().sort(Lead.compareByCreatedAt);
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    leadsMap.values().toArray();
   };
 
   public query ({ caller }) func getLead(id : Text) : async Lead {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     getLeadHelper(id);
   };
 
   public query ({ caller }) func getLeadsByStatus(status : Status) : async [Lead] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     leadsMap.values().toArray().filter(
       func(lead) { lead.status == status }
     );
   };
 
   public query ({ caller }) func getAllCompanies() : async [Company] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     companiesMap.values().toArray();
   };
 
   public query ({ caller }) func getCompany(id : Text) : async Company {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     getCompanyHelper(id);
   };
 
   public query ({ caller }) func getCompanyAssignmentsForLead(leadId : Text) : async [Text] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     switch (leadAssignments.get(leadId)) {
       case (null) { [] };
       case (?assignments) { assignments.toArray() };
@@ -390,6 +477,9 @@ actor {
   };
 
   public query ({ caller }) func getLeadsAssignedToCompany(companyId : Text) : async [Text] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     var leads = List.empty<Text>();
     let iter = leadAssignments.entries();
     iter.forEach(func((leadId, companies)) {
@@ -402,6 +492,9 @@ actor {
   };
 
   public query ({ caller }) func getActivityLog(leadId : Text) : async [LogEntry] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     switch (leadLogs.get(leadId)) {
       case (null) { [] };
       case (?logs) { logs.toArray() };

@@ -100,6 +100,9 @@ export default function CompaniesPage() {
                   Email
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Price/Lead
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -108,7 +111,7 @@ export default function CompaniesPage() {
               {isLoading ? (
                 ["r0", "r1", "r2"].map((rowKey) => (
                   <tr key={rowKey} className="border-b border-border">
-                    {["c0", "c1", "c2", "c3", "c4"].map((colKey) => (
+                    {["c0", "c1", "c2", "c3", "c4", "c5"].map((colKey) => (
                       <td key={colKey} className="px-4 py-3">
                         <Skeleton className="h-4 w-full" />
                       </td>
@@ -118,7 +121,7 @@ export default function CompaniesPage() {
               ) : isError ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-12 text-center text-muted-foreground"
                   >
                     <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -128,7 +131,7 @@ export default function CompaniesPage() {
               ) : companies.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-12 text-center text-muted-foreground"
                   >
                     <Building2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -170,6 +173,9 @@ export default function CompaniesPage() {
                       ) : (
                         "—"
                       )}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground font-medium tabular-nums">
+                      ${(Number(company.pricePerLead) / 100).toFixed(2)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">

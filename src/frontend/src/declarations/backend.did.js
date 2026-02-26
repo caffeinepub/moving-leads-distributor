@@ -29,6 +29,7 @@ export const Company = IDL.Record({
   'contactName' : IDL.Text,
   'name' : IDL.Text,
   'createdAt' : Time,
+  'pricePerLead' : IDL.Nat,
   'email' : IDL.Text,
   'phone' : IDL.Text,
 });
@@ -50,6 +51,17 @@ export const Lead = IDL.Record({
   'moveDate' : IDL.Text,
   'moveSize' : MoveSize,
 });
+export const BillingSummary = IDL.Record({
+  'studioCount' : IDL.Nat,
+  'twoBRCount' : IDL.Nat,
+  'pricePerLead' : IDL.Nat,
+  'totalLeads' : IDL.Nat,
+  'totalAmount' : IDL.Nat,
+  'threeBRPlusCount' : IDL.Nat,
+  'companyName' : IDL.Text,
+  'oneBRCount' : IDL.Nat,
+  'companyId' : IDL.Text,
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 
 export const idlService = IDL.Service({
@@ -58,7 +70,7 @@ export const idlService = IDL.Service({
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignLeadToCompany' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'createCompany' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
       [],
       [],
     ),
@@ -82,6 +94,7 @@ export const idlService = IDL.Service({
   'getActivityLog' : IDL.Func([IDL.Text], [IDL.Vec(LogEntry)], ['query']),
   'getAllCompanies' : IDL.Func([], [IDL.Vec(Company)], ['query']),
   'getAllLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
+  'getBillingSummary' : IDL.Func([], [IDL.Vec(BillingSummary)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCompany' : IDL.Func([IDL.Text], [Company], ['query']),
@@ -105,8 +118,9 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'removeCompanyAssignment' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setCompanyPricePerLead' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'updateCompany' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
       [],
       [],
     ),
@@ -148,6 +162,7 @@ export const idlFactory = ({ IDL }) => {
     'contactName' : IDL.Text,
     'name' : IDL.Text,
     'createdAt' : Time,
+    'pricePerLead' : IDL.Nat,
     'email' : IDL.Text,
     'phone' : IDL.Text,
   });
@@ -169,6 +184,17 @@ export const idlFactory = ({ IDL }) => {
     'moveDate' : IDL.Text,
     'moveSize' : MoveSize,
   });
+  const BillingSummary = IDL.Record({
+    'studioCount' : IDL.Nat,
+    'twoBRCount' : IDL.Nat,
+    'pricePerLead' : IDL.Nat,
+    'totalLeads' : IDL.Nat,
+    'totalAmount' : IDL.Nat,
+    'threeBRPlusCount' : IDL.Nat,
+    'companyName' : IDL.Text,
+    'oneBRCount' : IDL.Nat,
+    'companyId' : IDL.Text,
+  });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   
   return IDL.Service({
@@ -177,7 +203,7 @@ export const idlFactory = ({ IDL }) => {
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignLeadToCompany' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'createCompany' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
         [],
         [],
       ),
@@ -201,6 +227,7 @@ export const idlFactory = ({ IDL }) => {
     'getActivityLog' : IDL.Func([IDL.Text], [IDL.Vec(LogEntry)], ['query']),
     'getAllCompanies' : IDL.Func([], [IDL.Vec(Company)], ['query']),
     'getAllLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
+    'getBillingSummary' : IDL.Func([], [IDL.Vec(BillingSummary)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCompany' : IDL.Func([IDL.Text], [Company], ['query']),
@@ -224,8 +251,9 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'removeCompanyAssignment' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setCompanyPricePerLead' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'updateCompany' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
         [],
         [],
       ),

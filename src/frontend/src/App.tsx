@@ -3,8 +3,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { Truck } from "lucide-react";
 import LeadsPage from "./components/LeadsPage";
 import CompaniesPage from "./components/CompaniesPage";
+import BillingPage from "./components/BillingPage";
 
-type Tab = "leads" | "companies";
+type Tab = "leads" | "companies" | "billing";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("leads");
@@ -51,13 +52,30 @@ export default function App() {
             >
               Companies
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("billing")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === "billing"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+              }`}
+            >
+              Billing
+            </button>
           </nav>
         </div>
       </header>
 
       {/* Main content */}
       <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 sm:px-6 py-6">
-        {activeTab === "leads" ? <LeadsPage /> : <CompaniesPage />}
+        {activeTab === "leads" ? (
+          <LeadsPage />
+        ) : activeTab === "companies" ? (
+          <CompaniesPage />
+        ) : (
+          <BillingPage />
+        )}
       </main>
 
       {/* Footer */}

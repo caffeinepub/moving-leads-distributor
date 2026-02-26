@@ -20,6 +20,17 @@ export interface Lead {
     moveDate: string;
     moveSize: MoveSize;
 }
+export interface BillingSummary {
+    studioCount: bigint;
+    twoBRCount: bigint;
+    pricePerLead: bigint;
+    totalLeads: bigint;
+    totalAmount: bigint;
+    threeBRPlusCount: bigint;
+    companyName: string;
+    oneBRCount: bigint;
+    companyId: string;
+}
 export type Time = bigint;
 export interface LogEntry {
     message: string;
@@ -33,6 +44,7 @@ export interface Company {
     contactName: string;
     name: string;
     createdAt: Time;
+    pricePerLead: bigint;
     email: string;
     phone: string;
 }
@@ -56,13 +68,14 @@ export interface backendInterface {
     addActivityLog(leadId: string, message: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignLeadToCompany(leadId: string, companyId: string): Promise<void>;
-    createCompany(id: string, name: string, contactName: string, phone: string, email: string): Promise<void>;
+    createCompany(id: string, name: string, contactName: string, phone: string, email: string, pricePerLead: bigint): Promise<void>;
     createLead(id: string, customerName: string, phone: string, email: string, moveDate: string, originAddress: string, destinationAddress: string, moveSize: MoveSize, notes: string): Promise<void>;
     deleteCompany(id: string): Promise<void>;
     deleteLead(id: string): Promise<void>;
     getActivityLog(leadId: string): Promise<Array<LogEntry>>;
     getAllCompanies(): Promise<Array<Company>>;
     getAllLeads(): Promise<Array<Lead>>;
+    getBillingSummary(): Promise<Array<BillingSummary>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCompany(id: string): Promise<Company>;
@@ -74,6 +87,7 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     removeCompanyAssignment(leadId: string, companyId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    updateCompany(id: string, name: string, contactName: string, phone: string, email: string): Promise<void>;
+    setCompanyPricePerLead(companyId: string, price: bigint): Promise<void>;
+    updateCompany(id: string, name: string, contactName: string, phone: string, email: string, pricePerLead: bigint): Promise<void>;
     updateLead(id: string, customerName: string, phone: string, email: string, moveDate: string, originAddress: string, destinationAddress: string, moveSize: MoveSize, notes: string): Promise<void>;
 }

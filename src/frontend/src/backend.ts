@@ -102,6 +102,17 @@ export interface Lead {
     moveDate: string;
     moveSize: MoveSize;
 }
+export interface BillingSummary {
+    studioCount: bigint;
+    twoBRCount: bigint;
+    pricePerLead: bigint;
+    totalLeads: bigint;
+    totalAmount: bigint;
+    threeBRPlusCount: bigint;
+    companyName: string;
+    oneBRCount: bigint;
+    companyId: string;
+}
 export type Time = bigint;
 export interface LogEntry {
     message: string;
@@ -115,6 +126,7 @@ export interface Company {
     contactName: string;
     name: string;
     createdAt: Time;
+    pricePerLead: bigint;
     email: string;
     phone: string;
 }
@@ -139,13 +151,14 @@ export interface backendInterface {
     addActivityLog(leadId: string, message: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignLeadToCompany(leadId: string, companyId: string): Promise<void>;
-    createCompany(id: string, name: string, contactName: string, phone: string, email: string): Promise<void>;
+    createCompany(id: string, name: string, contactName: string, phone: string, email: string, pricePerLead: bigint): Promise<void>;
     createLead(id: string, customerName: string, phone: string, email: string, moveDate: string, originAddress: string, destinationAddress: string, moveSize: MoveSize, notes: string): Promise<void>;
     deleteCompany(id: string): Promise<void>;
     deleteLead(id: string): Promise<void>;
     getActivityLog(leadId: string): Promise<Array<LogEntry>>;
     getAllCompanies(): Promise<Array<Company>>;
     getAllLeads(): Promise<Array<Lead>>;
+    getBillingSummary(): Promise<Array<BillingSummary>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCompany(id: string): Promise<Company>;
@@ -157,7 +170,8 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     removeCompanyAssignment(leadId: string, companyId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    updateCompany(id: string, name: string, contactName: string, phone: string, email: string): Promise<void>;
+    setCompanyPricePerLead(companyId: string, price: bigint): Promise<void>;
+    updateCompany(id: string, name: string, contactName: string, phone: string, email: string, pricePerLead: bigint): Promise<void>;
     updateLead(id: string, customerName: string, phone: string, email: string, moveDate: string, originAddress: string, destinationAddress: string, moveSize: MoveSize, notes: string): Promise<void>;
 }
 import type { Lead as _Lead, MoveSize as _MoveSize, Status as _Status, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
@@ -219,17 +233,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createCompany(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<void> {
+    async createCompany(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createCompany(arg0, arg1, arg2, arg3, arg4);
+                const result = await this.actor.createCompany(arg0, arg1, arg2, arg3, arg4, arg5);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createCompany(arg0, arg1, arg2, arg3, arg4);
+            const result = await this.actor.createCompany(arg0, arg1, arg2, arg3, arg4, arg5);
             return result;
         }
     }
@@ -315,6 +329,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getAllLeads();
             return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getBillingSummary(): Promise<Array<BillingSummary>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getBillingSummary();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getBillingSummary();
+            return result;
         }
     }
     async getCallerUserProfile(): Promise<UserProfile | null> {
@@ -471,17 +499,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateCompany(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<void> {
+    async setCompanyPricePerLead(arg0: string, arg1: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateCompany(arg0, arg1, arg2, arg3, arg4);
+                const result = await this.actor.setCompanyPricePerLead(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateCompany(arg0, arg1, arg2, arg3, arg4);
+            const result = await this.actor.setCompanyPricePerLead(arg0, arg1);
+            return result;
+        }
+    }
+    async updateCompany(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCompany(arg0, arg1, arg2, arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCompany(arg0, arg1, arg2, arg3, arg4, arg5);
             return result;
         }
     }

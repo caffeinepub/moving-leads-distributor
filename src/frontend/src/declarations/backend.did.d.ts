@@ -10,11 +10,23 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface BillingSummary {
+  'studioCount' : bigint,
+  'twoBRCount' : bigint,
+  'pricePerLead' : bigint,
+  'totalLeads' : bigint,
+  'totalAmount' : bigint,
+  'threeBRPlusCount' : bigint,
+  'companyName' : string,
+  'oneBRCount' : bigint,
+  'companyId' : string,
+}
 export interface Company {
   'id' : string,
   'contactName' : string,
   'name' : string,
   'createdAt' : Time,
+  'pricePerLead' : bigint,
   'email' : string,
   'phone' : string,
 }
@@ -50,7 +62,7 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignLeadToCompany' : ActorMethod<[string, string], undefined>,
   'createCompany' : ActorMethod<
-    [string, string, string, string, string],
+    [string, string, string, string, string, bigint],
     undefined
   >,
   'createLead' : ActorMethod<
@@ -62,6 +74,7 @@ export interface _SERVICE {
   'getActivityLog' : ActorMethod<[string], Array<LogEntry>>,
   'getAllCompanies' : ActorMethod<[], Array<Company>>,
   'getAllLeads' : ActorMethod<[], Array<Lead>>,
+  'getBillingSummary' : ActorMethod<[], Array<BillingSummary>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCompany' : ActorMethod<[string], Company>,
@@ -73,8 +86,9 @@ export interface _SERVICE {
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'removeCompanyAssignment' : ActorMethod<[string, string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setCompanyPricePerLead' : ActorMethod<[string, bigint], undefined>,
   'updateCompany' : ActorMethod<
-    [string, string, string, string, string],
+    [string, string, string, string, string, bigint],
     undefined
   >,
   'updateLead' : ActorMethod<

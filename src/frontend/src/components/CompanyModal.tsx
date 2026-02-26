@@ -25,6 +25,7 @@ interface FormData {
   contactName: string;
   phone: string;
   email: string;
+  pricePerLead: string;
 }
 
 const DEFAULT_FORM: FormData = {
@@ -32,6 +33,7 @@ const DEFAULT_FORM: FormData = {
   contactName: "",
   phone: "",
   email: "",
+  pricePerLead: "",
 };
 
 export default function CompanyModal({
@@ -53,6 +55,7 @@ export default function CompanyModal({
         contactName: company.contactName,
         phone: company.phone,
         email: company.email,
+        pricePerLead: (Number(company.pricePerLead) / 100).toFixed(2),
       });
     } else {
       setForm(DEFAULT_FORM);
@@ -69,12 +72,28 @@ export default function CompanyModal({
       toast.error("Company name is required");
       return;
     }
+    const pricePerLead = BigInt(
+      Math.round(parseFloat(form.pricePerLead || "0") * 100),
+    );
     try {
       if (isEditing && company) {
-        await updateCompany.mutateAsync({ id: company.id, ...form });
+        await updateCompany.mutateAsync({
+          id: company.id,
+          name: form.name,
+          contactName: form.contactName,
+          phone: form.phone,
+          email: form.email,
+          pricePerLead,
+        });
         toast.success("Company updated successfully");
       } else {
-        await createCompany.mutateAsync(form);
+        await createCompany.mutateAsync({
+          name: form.name,
+          contactName: form.contactName,
+          phone: form.phone,
+          email: form.email,
+          pricePerLead,
+        });
         toast.success("Company created successfully");
       }
       onOpenChange(false);
@@ -146,6 +165,22 @@ export default function CompanyModal({
                 className="h-9 text-sm"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="pricePerLead" className="text-xs font-medium">
+              Price Per Lead ($)
+            </Label>
+            <Input
+              id="pricePerLead"
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.pricePerLead}
+              onChange={(e) => handleChange("pricePerLead", e.target.value)}
+              placeholder="0.00"
+              className="h-9 text-sm"
+            />
           </div>
 
           <DialogFooter className="pt-2">

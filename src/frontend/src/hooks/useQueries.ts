@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useActor } from "./useActor";
-import { type Lead, type Company, MoveSize, Status } from "../backend";
+import { type Lead, type Company, type BillingSummary, MoveSize, Status } from "../backend";
 
 // ── Query Keys ──────────────────────────────────────────────────────────────
 export const QUERY_KEYS = {
@@ -9,6 +9,7 @@ export const QUERY_KEYS = {
   leadAssignments: (leadId: string) => ["leadAssignments", leadId] as const,
   isAdmin: ["isAdmin"] as const,
   activityLog: (leadId: string) => ["activityLog", leadId] as const,
+  billingSummary: ["billingSummary"] as const,
 };
 
 // ── Admin Check ───────────────────────────────────────────────────────────────
@@ -171,6 +172,7 @@ export function useCreateCompany() {
       contactName: string;
       phone: string;
       email: string;
+      pricePerLead?: bigint;
     }) => {
       if (!actor) throw new Error("Actor not available");
       const id = crypto.randomUUID();
@@ -180,10 +182,12 @@ export function useCreateCompany() {
         params.contactName,
         params.phone,
         params.email,
+        params.pricePerLead ?? 0n,
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.companies });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billingSummary });
     },
   });
 }
@@ -198,6 +202,7 @@ export function useUpdateCompany() {
       contactName: string;
       phone: string;
       email: string;
+      pricePerLead?: bigint;
     }) => {
       if (!actor) throw new Error("Actor not available");
       await actor.updateCompany(
@@ -206,10 +211,27 @@ export function useUpdateCompany() {
         params.contactName,
         params.phone,
         params.email,
+        params.pricePerLead ?? 0n,
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.companies });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billingSummary });
+    },
+  });
+}
+
+export function useSetCompanyPricePerLead() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { companyId: string; price: bigint }) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.setCompanyPricePerLead(params.companyId, params.price);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.companies });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billingSummary });
     },
   });
 }
@@ -269,5 +291,18 @@ export function useDistributeLead() {
   });
 }
 
+// ── Billing ───────────────────────────────────────────────────────────────────
+export function useGetBillingSummary() {
+  const { actor, isFetching } = useActor();
+  return useQuery<BillingSummary[]>({
+    queryKey: QUERY_KEYS.billingSummary,
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getBillingSummary();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 export { MoveSize, Status };
-export type { Lead, Company };
+export type { Lead, Company, BillingSummary };

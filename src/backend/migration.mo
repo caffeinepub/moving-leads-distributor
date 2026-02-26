@@ -1,10 +1,10 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
-import Text "mo:core/Text";
-import Time "mo:core/Time";
+import Principal "mo:core/Principal";
+import AccessControl "authorization/access-control";
 
 module {
-  type Lead = {
+  type OldLead = {
     id : Text;
     customerName : Text;
     phone : Text;
@@ -12,41 +12,91 @@ module {
     moveDate : Text;
     originAddress : Text;
     destinationAddress : Text;
-    moveSize : MoveSize;
+    moveSize : OldMoveSize;
     notes : Text;
-    status : Status;
-    createdAt : Time.Time;
+    status : OldStatus;
+    createdAt : Int;
   };
 
-  type Company = {
-    id : Text;
-    name : Text;
-    contactName : Text;
-    phone : Text;
-    email : Text;
-    createdAt : Time.Time;
-  };
-
-  type MoveSize = {
+  type OldMoveSize = {
     #studio;
     #oneBR;
     #twoBR;
     #threeBRPlus;
   };
 
-  type Status = {
+  type OldStatus = {
     #new;
     #distributed;
     #closed;
   };
 
-  type ActorState = {
-    leadsMap : Map.Map<Text, Lead>;
-    companiesMap : Map.Map<Text, Company>;
-    leadAssignments : Map.Map<Text, List.List<Text>>;
+  type OldCompany = {
+    id : Text;
+    name : Text;
+    contactName : Text;
+    phone : Text;
+    email : Text;
+    createdAt : Int;
   };
 
-  public func run(state : ActorState) : ActorState {
-    state;
+  type OldLogEntry = {
+    timestamp : Int;
+    message : Text;
+  };
+
+  type OldUserProfile = {
+    name : Text;
+  };
+
+  type OldActor = {
+    accessControlState : AccessControl.AccessControlState;
+    leadsMap : Map.Map<Text, OldLead>;
+    companiesMap : Map.Map<Text, OldCompany>;
+    leadAssignments : Map.Map<Text, List.List<Text>>;
+    leadLogs : Map.Map<Text, List.List<OldLogEntry>>;
+    userProfiles : Map.Map<Principal, OldUserProfile>;
+  };
+
+  type NewLead = {
+    id : Text;
+    customerName : Text;
+    phone : Text;
+    email : Text;
+    moveDate : Text;
+    originAddress : Text;
+    destinationAddress : Text;
+    moveSize : OldMoveSize;
+    notes : Text;
+    status : OldStatus;
+    createdAt : Int;
+  };
+
+  type NewCompany = {
+    id : Text;
+    name : Text;
+    contactName : Text;
+    phone : Text;
+    email : Text;
+    pricePerLead : Nat;
+    createdAt : Int;
+  };
+
+  type NewActor = {
+    accessControlState : AccessControl.AccessControlState;
+    leadsMap : Map.Map<Text, NewLead>;
+    companiesMap : Map.Map<Text, NewCompany>;
+    leadAssignments : Map.Map<Text, List.List<Text>>;
+    leadLogs : Map.Map<Text, List.List<OldLogEntry>>;
+    userProfiles : Map.Map<Principal, OldUserProfile>;
+  };
+
+  public func run(old : OldActor) : NewActor {
+    let newCompanies = old.companiesMap.map<Text, OldCompany, NewCompany>(
+      func(_id, oldCompany) {
+        { oldCompany with pricePerLead = 0 };
+      }
+    );
+    { old with companiesMap = newCompanies };
   };
 };
