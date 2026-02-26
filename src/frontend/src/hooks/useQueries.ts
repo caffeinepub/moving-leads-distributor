@@ -7,7 +7,52 @@ export const QUERY_KEYS = {
   leads: ["leads"] as const,
   companies: ["companies"] as const,
   leadAssignments: (leadId: string) => ["leadAssignments", leadId] as const,
+  isAdmin: ["isAdmin"] as const,
+  activityLog: (leadId: string) => ["activityLog", leadId] as const,
 };
+
+// ── Admin Check ───────────────────────────────────────────────────────────────
+export function useIsCallerAdmin(enabled: boolean) {
+  const { actor, isFetching } = useActor();
+  return useQuery<boolean>({
+    queryKey: QUERY_KEYS.isAdmin,
+    queryFn: async () => {
+      if (!actor) return false;
+      return actor.isCallerAdmin();
+    },
+    enabled: !!actor && !isFetching && enabled,
+    retry: false,
+  });
+}
+
+// ── Activity Log ──────────────────────────────────────────────────────────────
+export function useGetActivityLog(leadId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: QUERY_KEYS.activityLog(leadId),
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getActivityLog(leadId);
+    },
+    enabled: !!actor && !isFetching && !!leadId,
+  });
+}
+
+export function useAddActivityLog() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { leadId: string; message: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.addActivityLog(params.leadId, params.message);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.activityLog(variables.leadId),
+      });
+    },
+  });
+}
 
 // ── Leads ────────────────────────────────────────────────────────────────────
 export function useGetAllLeads() {

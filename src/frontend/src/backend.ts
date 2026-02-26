@@ -103,6 +103,13 @@ export interface Lead {
     moveSize: MoveSize;
 }
 export type Time = bigint;
+export interface LogEntry {
+    message: string;
+    timestamp: Time;
+}
+export interface UserProfile {
+    name: string;
+}
 export interface Company {
     id: string;
     contactName: string;
@@ -122,26 +129,82 @@ export enum Status {
     closed = "closed",
     distributed = "distributed"
 }
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
 export interface backendInterface {
+    _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    addActivityLog(leadId: string, message: string): Promise<void>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignLeadToCompany(leadId: string, companyId: string): Promise<void>;
     createCompany(id: string, name: string, contactName: string, phone: string, email: string): Promise<void>;
     createLead(id: string, customerName: string, phone: string, email: string, moveDate: string, originAddress: string, destinationAddress: string, moveSize: MoveSize, notes: string): Promise<void>;
     deleteCompany(id: string): Promise<void>;
     deleteLead(id: string): Promise<void>;
+    getActivityLog(leadId: string): Promise<Array<LogEntry>>;
     getAllCompanies(): Promise<Array<Company>>;
     getAllLeads(): Promise<Array<Lead>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
     getCompany(id: string): Promise<Company>;
     getCompanyAssignmentsForLead(leadId: string): Promise<Array<string>>;
     getLead(id: string): Promise<Lead>;
     getLeadsAssignedToCompany(companyId: string): Promise<Array<string>>;
     getLeadsByStatus(status: Status): Promise<Array<Lead>>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
     removeCompanyAssignment(leadId: string, companyId: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateCompany(id: string, name: string, contactName: string, phone: string, email: string): Promise<void>;
     updateLead(id: string, customerName: string, phone: string, email: string, moveDate: string, originAddress: string, destinationAddress: string, moveSize: MoveSize, notes: string): Promise<void>;
 }
-import type { Lead as _Lead, MoveSize as _MoveSize, Status as _Status, Time as _Time } from "./declarations/backend.did.d.ts";
+import type { Lead as _Lead, MoveSize as _MoveSize, Status as _Status, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor._initializeAccessControlWithSecret(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor._initializeAccessControlWithSecret(arg0);
+            return result;
+        }
+    }
+    async addActivityLog(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addActivityLog(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addActivityLog(arg0, arg1);
+            return result;
+        }
+    }
+    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
     async assignLeadToCompany(arg0: string, arg1: string): Promise<void> {
         if (this.processError) {
             try {
@@ -173,14 +236,14 @@ export class Backend implements backendInterface {
     async createLead(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: MoveSize, arg8: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n1(this._uploadFile, this._downloadFile, arg7), arg8);
+                const result = await this.actor.createLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n3(this._uploadFile, this._downloadFile, arg7), arg8);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n1(this._uploadFile, this._downloadFile, arg7), arg8);
+            const result = await this.actor.createLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n3(this._uploadFile, this._downloadFile, arg7), arg8);
             return result;
         }
     }
@@ -212,6 +275,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getActivityLog(arg0: string): Promise<Array<LogEntry>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getActivityLog(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getActivityLog(arg0);
+            return result;
+        }
+    }
     async getAllCompanies(): Promise<Array<Company>> {
         if (this.processError) {
             try {
@@ -230,14 +307,42 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllLeads();
-                return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllLeads();
-            return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCallerUserProfile(): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserProfile();
+                return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserProfile();
+            return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCallerUserRole(): Promise<UserRole> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserRole();
+                return from_candid_UserRole_n13(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserRole();
+            return from_candid_UserRole_n13(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCompany(arg0: string): Promise<Company> {
@@ -272,14 +377,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getLead(arg0);
-                return from_candid_Lead_n4(this._uploadFile, this._downloadFile, result);
+                return from_candid_Lead_n6(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getLead(arg0);
-            return from_candid_Lead_n4(this._uploadFile, this._downloadFile, result);
+            return from_candid_Lead_n6(this._uploadFile, this._downloadFile, result);
         }
     }
     async getLeadsAssignedToCompany(arg0: string): Promise<Array<string>> {
@@ -299,15 +404,43 @@ export class Backend implements backendInterface {
     async getLeadsByStatus(arg0: Status): Promise<Array<Lead>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getLeadsByStatus(to_candid_Status_n10(this._uploadFile, this._downloadFile, arg0));
-                return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getLeadsByStatus(to_candid_Status_n15(this._uploadFile, this._downloadFile, arg0));
+                return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getLeadsByStatus(to_candid_Status_n10(this._uploadFile, this._downloadFile, arg0));
-            return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getLeadsByStatus(to_candid_Status_n15(this._uploadFile, this._downloadFile, arg0));
+            return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserProfile(arg0);
+                return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserProfile(arg0);
+            return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async isCallerAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isCallerAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isCallerAdmin();
+            return result;
         }
     }
     async removeCompanyAssignment(arg0: string, arg1: string): Promise<void> {
@@ -321,6 +454,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.removeCompanyAssignment(arg0, arg1);
+            return result;
+        }
+    }
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(arg0);
             return result;
         }
     }
@@ -341,28 +488,34 @@ export class Backend implements backendInterface {
     async updateLead(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: MoveSize, arg8: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n1(this._uploadFile, this._downloadFile, arg7), arg8);
+                const result = await this.actor.updateLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n3(this._uploadFile, this._downloadFile, arg7), arg8);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n1(this._uploadFile, this._downloadFile, arg7), arg8);
+            const result = await this.actor.updateLead(arg0, arg1, arg2, arg3, arg4, arg5, arg6, to_candid_MoveSize_n3(this._uploadFile, this._downloadFile, arg7), arg8);
             return result;
         }
     }
 }
-function from_candid_Lead_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Lead): Lead {
-    return from_candid_record_n5(_uploadFile, _downloadFile, value);
+function from_candid_Lead_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Lead): Lead {
+    return from_candid_record_n7(_uploadFile, _downloadFile, value);
 }
-function from_candid_MoveSize_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _MoveSize): MoveSize {
+function from_candid_MoveSize_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _MoveSize): MoveSize {
+    return from_candid_variant_n11(_uploadFile, _downloadFile, value);
+}
+function from_candid_Status_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Status): Status {
     return from_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function from_candid_Status_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Status): Status {
-    return from_candid_variant_n7(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n14(_uploadFile, _downloadFile, value);
 }
-function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
     customerName: string;
     status: _Status;
@@ -390,7 +543,7 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
     return {
         id: value.id,
         customerName: value.customerName,
-        status: from_candid_Status_n6(_uploadFile, _downloadFile, value.status),
+        status: from_candid_Status_n8(_uploadFile, _downloadFile, value.status),
         originAddress: value.originAddress,
         destinationAddress: value.destinationAddress,
         createdAt: value.createdAt,
@@ -398,19 +551,10 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
         notes: value.notes,
         phone: value.phone,
         moveDate: value.moveDate,
-        moveSize: from_candid_MoveSize_n8(_uploadFile, _downloadFile, value.moveSize)
+        moveSize: from_candid_MoveSize_n10(_uploadFile, _downloadFile, value.moveSize)
     };
 }
-function from_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    new: null;
-} | {
-    closed: null;
-} | {
-    distributed: null;
-}): Status {
-    return "new" in value ? Status.new : "closed" in value ? Status.closed : "distributed" in value ? Status.distributed : value;
-}
-function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     studio: null;
 } | {
     twoBR: null;
@@ -421,16 +565,37 @@ function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): MoveSize {
     return "studio" in value ? MoveSize.studio : "twoBR" in value ? MoveSize.twoBR : "oneBR" in value ? MoveSize.oneBR : "threeBRPlus" in value ? MoveSize.threeBRPlus : value;
 }
-function from_candid_vec_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Lead>): Array<Lead> {
-    return value.map((x)=>from_candid_Lead_n4(_uploadFile, _downloadFile, x));
+function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+}): UserRole {
+    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function to_candid_MoveSize_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MoveSize): _MoveSize {
+function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    new: null;
+} | {
+    closed: null;
+} | {
+    distributed: null;
+}): Status {
+    return "new" in value ? Status.new : "closed" in value ? Status.closed : "distributed" in value ? Status.distributed : value;
+}
+function from_candid_vec_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Lead>): Array<Lead> {
+    return value.map((x)=>from_candid_Lead_n6(_uploadFile, _downloadFile, x));
+}
+function to_candid_MoveSize_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MoveSize): _MoveSize {
+    return to_candid_variant_n4(_uploadFile, _downloadFile, value);
+}
+function to_candid_Status_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Status): _Status {
+    return to_candid_variant_n16(_uploadFile, _downloadFile, value);
+}
+function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function to_candid_Status_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Status): _Status {
-    return to_candid_variant_n11(_uploadFile, _downloadFile, value);
-}
-function to_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Status): {
+function to_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Status): {
     new: null;
 } | {
     closed: null;
@@ -445,7 +610,22 @@ function to_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint
         distributed: null
     } : value;
 }
-function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MoveSize): {
+function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+} {
+    return value == UserRole.admin ? {
+        admin: null
+    } : value == UserRole.user ? {
+        user: null
+    } : value == UserRole.guest ? {
+        guest: null
+    } : value;
+}
+function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MoveSize): {
     studio: null;
 } | {
     twoBR: null;

@@ -1,4 +1,4 @@
- 
+/* eslint-disable */
 
 // @ts-nocheck
 
@@ -8,6 +8,11 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
 export const MoveSize = IDL.Variant({
   'studio' : IDL.Null,
   'twoBR' : IDL.Null,
@@ -15,6 +20,10 @@ export const MoveSize = IDL.Variant({
   'threeBRPlus' : IDL.Null,
 });
 export const Time = IDL.Int;
+export const LogEntry = IDL.Record({
+  'message' : IDL.Text,
+  'timestamp' : Time,
+});
 export const Company = IDL.Record({
   'id' : IDL.Text,
   'contactName' : IDL.Text,
@@ -41,8 +50,12 @@ export const Lead = IDL.Record({
   'moveDate' : IDL.Text,
   'moveSize' : MoveSize,
 });
+export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 
 export const idlService = IDL.Service({
+  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addActivityLog' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignLeadToCompany' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'createCompany' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -66,8 +79,11 @@ export const idlService = IDL.Service({
     ),
   'deleteCompany' : IDL.Func([IDL.Text], [], []),
   'deleteLead' : IDL.Func([IDL.Text], [], []),
+  'getActivityLog' : IDL.Func([IDL.Text], [IDL.Vec(LogEntry)], ['query']),
   'getAllCompanies' : IDL.Func([], [IDL.Vec(Company)], ['query']),
   'getAllLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCompany' : IDL.Func([IDL.Text], [Company], ['query']),
   'getCompanyAssignmentsForLead' : IDL.Func(
       [IDL.Text],
@@ -81,7 +97,14 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getLeadsByStatus' : IDL.Func([Status], [IDL.Vec(Lead)], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'removeCompanyAssignment' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateCompany' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [],
@@ -107,6 +130,11 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
   const MoveSize = IDL.Variant({
     'studio' : IDL.Null,
     'twoBR' : IDL.Null,
@@ -114,6 +142,7 @@ export const idlFactory = ({ IDL }) => {
     'threeBRPlus' : IDL.Null,
   });
   const Time = IDL.Int;
+  const LogEntry = IDL.Record({ 'message' : IDL.Text, 'timestamp' : Time });
   const Company = IDL.Record({
     'id' : IDL.Text,
     'contactName' : IDL.Text,
@@ -140,8 +169,12 @@ export const idlFactory = ({ IDL }) => {
     'moveDate' : IDL.Text,
     'moveSize' : MoveSize,
   });
+  const UserProfile = IDL.Record({ 'name' : IDL.Text });
   
   return IDL.Service({
+    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addActivityLog' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignLeadToCompany' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'createCompany' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -165,8 +198,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'deleteCompany' : IDL.Func([IDL.Text], [], []),
     'deleteLead' : IDL.Func([IDL.Text], [], []),
+    'getActivityLog' : IDL.Func([IDL.Text], [IDL.Vec(LogEntry)], ['query']),
     'getAllCompanies' : IDL.Func([], [IDL.Vec(Company)], ['query']),
     'getAllLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCompany' : IDL.Func([IDL.Text], [Company], ['query']),
     'getCompanyAssignmentsForLead' : IDL.Func(
         [IDL.Text],
@@ -180,7 +216,14 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getLeadsByStatus' : IDL.Func([Status], [IDL.Vec(Lead)], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'removeCompanyAssignment' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateCompany' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [],

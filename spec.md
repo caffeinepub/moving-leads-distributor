@@ -1,40 +1,38 @@
 # Moving Leads Distributor
 
 ## Current State
-New project. No existing code.
+The app has a full leads and companies management system with:
+- CRUD for leads (customer name, phone, email, move date, addresses, move size, notes, status)
+- CRUD for moving companies
+- Lead distribution (assign/remove company assignments)
+- Dashboard with leads table, status badges, and company assignment display
+- No authentication -- app is fully open
 
 ## Requested Changes (Diff)
 
 ### Add
-- Moving leads management system for an admin to create, manage, and distribute leads to moving companies
-- Lead data: customer name, phone, email, move date, origin address, destination address, move size (studio/1BR/2BR/3BR+), notes, status (new/distributed/closed)
-- Moving companies list: company name, contact name, phone, email
-- Distribution: assign a lead to one or more moving companies
-- Dashboard showing all leads, their status, and assigned companies
+- Single admin login screen protecting all app routes
+- Internet Identity-based authentication via the authorization component
+- Admin-only access: all pages (dashboard, leads, companies) require login
+- Logout button in the app header
 
 ### Modify
-N/A
+- All existing routes to be gated behind auth check
+- Header to include logout button when authenticated
 
 ### Remove
-N/A
+- Nothing
 
 ## Implementation Plan
-
-**Backend:**
-- CRUD for leads (create, read, update, delete)
-- CRUD for moving companies (create, read, update, delete)
-- Lead distribution: assign/unassign a lead to one or more companies
-- Query leads by status; query assignments by lead or company
-
-**Frontend:**
-- Dashboard page with leads table (status badges, assigned company names)
-- Add/Edit Lead modal
-- Add/Edit Moving Company modal
-- Distribute Lead modal (multi-select companies from list)
-- Companies management page (list, add, edit, delete)
+1. Select the authorization component
+2. Regenerate backend with authorization support (admin principal check on all mutations)
+3. Update frontend to:
+   - Show login screen if not authenticated
+   - Redirect to login on unauthenticated access
+   - Add logout button to header
+   - Wrap all existing pages with auth guard
 
 ## UX Notes
-- Clean, professional look suited for a logistics/moving business
-- Color-coded status badges: blue=new, orange=distributed, green=closed
-- Easy one-click distribution flow from the leads table
-- Responsive layout
+- Login screen should be clean and professional, matching the existing app style
+- After login, redirect to the dashboard
+- Logout should return to the login screen

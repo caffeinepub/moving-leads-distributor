@@ -1,4 +1,4 @@
- 
+/* eslint-disable */
 
 // @ts-nocheck
 
@@ -31,6 +31,7 @@ export interface Lead {
   'moveDate' : string,
   'moveSize' : MoveSize,
 }
+export interface LogEntry { 'message' : string, 'timestamp' : Time }
 export type MoveSize = { 'studio' : null } |
   { 'twoBR' : null } |
   { 'oneBR' : null } |
@@ -39,7 +40,14 @@ export type Status = { 'new' : null } |
   { 'closed' : null } |
   { 'distributed' : null };
 export type Time = bigint;
+export interface UserProfile { 'name' : string }
+export type UserRole = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
 export interface _SERVICE {
+  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addActivityLog' : ActorMethod<[string, string], undefined>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignLeadToCompany' : ActorMethod<[string, string], undefined>,
   'createCompany' : ActorMethod<
     [string, string, string, string, string],
@@ -51,14 +59,20 @@ export interface _SERVICE {
   >,
   'deleteCompany' : ActorMethod<[string], undefined>,
   'deleteLead' : ActorMethod<[string], undefined>,
+  'getActivityLog' : ActorMethod<[string], Array<LogEntry>>,
   'getAllCompanies' : ActorMethod<[], Array<Company>>,
   'getAllLeads' : ActorMethod<[], Array<Lead>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
+  'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCompany' : ActorMethod<[string], Company>,
   'getCompanyAssignmentsForLead' : ActorMethod<[string], Array<string>>,
   'getLead' : ActorMethod<[string], Lead>,
   'getLeadsAssignedToCompany' : ActorMethod<[string], Array<string>>,
   'getLeadsByStatus' : ActorMethod<[Status], Array<Lead>>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'isCallerAdmin' : ActorMethod<[], boolean>,
   'removeCompanyAssignment' : ActorMethod<[string, string], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateCompany' : ActorMethod<
     [string, string, string, string, string],
     undefined
