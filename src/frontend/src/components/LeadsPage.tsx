@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Loader2,
   ArrowRight,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 import { type Lead, type Company, Status } from "../backend";
@@ -32,6 +33,7 @@ import {
 import { formatMoveSize, formatStatus, formatDate } from "../utils/formatters";
 import LeadModal from "./LeadModal";
 import DistributeModal from "./DistributeModal";
+import ActivityLogModal from "./ActivityLogModal";
 
 type FilterTab = "all" | Status;
 
@@ -89,6 +91,8 @@ export default function LeadsPage() {
   const [distributingLead, setDistributingLead] = useState<Lead | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
+  const [activityLogOpen, setActivityLogOpen] = useState(false);
+  const [activityLogLead, setActivityLogLead] = useState<Lead | null>(null);
 
   const { data: leads = [], isLoading, isError } = useGetAllLeads();
   const { data: companies = [] } = useGetAllCompanies();
@@ -130,6 +134,11 @@ export default function LeadsPage() {
   const handleDeleteClick = (lead: Lead) => {
     setDeletingLead(lead);
     setDeleteDialogOpen(true);
+  };
+
+  const handleActivityLog = (lead: Lead) => {
+    setActivityLogLead(lead);
+    setActivityLogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
